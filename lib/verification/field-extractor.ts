@@ -1,7 +1,7 @@
 import { FIELD_LABELS, normalizeText, numericValues, type ExtractedField, type ExtractedFields, type FieldKey } from "./label-verifier";
-import { groupTextPanels } from "./ocr-layout";
-import type { EvidencePage, OcrLine } from "./scan-label";
-import { originalImageBox, unionBoxes } from "./label-evidence";
+import { groupTextPanels } from "../ocr/ocr-layout";
+import type { EvidencePage, OcrLine } from "../ocr/scan-label";
+import { originalImageBox, unionBoxes } from "../label-evidence";
 
 type Candidate = ExtractedField & { priority: number; identity: string };
 const producerPrefix = /^(?:(?:producer|bottler)\s*:\s*|(?:bottled|produced|distilled|brewed|canned)(?:\s*(?:&|and)\s*(?:bottled|produced|distilled|brewed|canned))?\s+by\s*)(.*)$/i;

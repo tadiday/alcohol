@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { reviewApplication } from "@/lib/application-review";
+import { reviewApplication } from "@/lib/application/application-review";
 import type { ValueEvidence } from "@/lib/label-evidence";
-import type { ApplicationFields, FieldKey } from "@/lib/label-verifier";
+import type { ApplicationFields, FieldKey } from "@/lib/verification/label-verifier";
 import { SAMPLE_APPLICATION, type SampleLabel } from "@/lib/sample-labels";
 import { ApplicationForm } from "./components/application-form";
 import { EvidenceViewer } from "./components/application-evidence";

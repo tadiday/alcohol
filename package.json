@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --import tsx --test lib/*.test.ts",
+    "test": "node --import tsx --test lib/*/*.test.ts",
     "samples:generate": "node --import tsx scripts/generate-samples.ts",
     "samples:check": "node --import tsx scripts/check-samples.ts"
   },

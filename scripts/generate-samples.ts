@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import sharp from "sharp";
-import { GOVERNMENT_WARNING } from "../lib/label-verifier";
+import { GOVERNMENT_WARNING } from "../lib/verification/label-verifier";
 import { SAMPLE_APPLICATION, SAMPLE_LABELS } from "../lib/sample-labels";
 
 function escapeXml(text: string) {

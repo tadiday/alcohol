@@ -1,6 +1,6 @@
-import type { ApplicationReview, ProcessedApplicationImage } from "@/lib/application-review";
+import type { ApplicationReview, ProcessedApplicationImage } from "@/lib/application/application-review";
 import type { ValueEvidence } from "@/lib/label-evidence";
-import type { ComparisonStatus } from "@/lib/label-verifier";
+import type { ComparisonStatus } from "@/lib/verification/label-verifier";
 import { EvidenceList } from "./application-evidence";
 
 const STATUS_PRESENTATION = {

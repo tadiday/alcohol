@@ -1,5 +1,5 @@
-import { extractWarningBlock, warningWordingMatches } from "./label-verifier";
-import { originalImageBox, unionBoxes, type BoundingBox, type ImageSource } from "./label-evidence";
+import { extractWarningBlock, warningWordingMatches } from "../verification/label-verifier";
+import { originalImageBox, unionBoxes, type BoundingBox, type ImageSource } from "../label-evidence";
 
 export const LABEL_ROTATIONS = [0, 90, 180, 270] as const;
 export type Rotation = (typeof LABEL_ROTATIONS)[number];

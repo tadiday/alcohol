@@ -5,14 +5,14 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createWorker } from "tesseract.js";
 import sharp from "sharp";
-import { verifyLabel, verifyGovernmentWarning } from "../lib/label-verifier";
+import { verifyLabel, verifyGovernmentWarning } from "../lib/verification/label-verifier";
 import { SAMPLE_APPLICATION, SAMPLE_LABELS } from "../lib/sample-labels";
-import { OCR_PARAMETERS } from "../lib/ocr-config";
-import { scanLabelOrientations } from "../lib/scan-label";
-import { extractSpatialFields } from "../lib/field-extractor";
-import { reviewApplication } from "../lib/application-review";
-import { processApplicationBatch } from "../lib/application-processor";
-import type { LabelScan } from "../lib/scan-label";
+import { OCR_PARAMETERS } from "../lib/ocr/ocr-config";
+import { scanLabelOrientations } from "../lib/ocr/scan-label";
+import { extractSpatialFields } from "../lib/verification/field-extractor";
+import { reviewApplication } from "../lib/application/application-review";
+import { processApplicationBatch } from "../lib/application/application-processor";
+import type { LabelScan } from "../lib/ocr/scan-label";
 
 async function checkImage(worker: Awaited<ReturnType<typeof createWorker>>, image: string | Buffer) {
   const metadata = await sharp(image).metadata();

@@ -1,4 +1,4 @@
-import type { ValueEvidence } from "./label-evidence";
+import type { ValueEvidence } from "../label-evidence";
 
 export type ComparisonStatus = "match" | "mismatch" | "needs-review";
 

@@ -1,5 +1,5 @@
 import { validateImageAssociation, type ApplicationImage } from "./application-review";
-import type { LabelScan } from "./scan-label";
+import type { LabelScan } from "../ocr/scan-label";
 
 export const MAX_OCR_CONCURRENCY = 2;
 export type ImageTask<T> = Pick<ApplicationImage, "id" | "applicationId" | "name" | "label"> & { input: T };

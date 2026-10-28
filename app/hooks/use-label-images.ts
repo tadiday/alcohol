@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createWorker, type Worker } from "tesseract.js";
-import { MAX_OCR_CONCURRENCY, processApplicationBatch, type ImageTask } from "@/lib/application-processor";
-import { isProcessedImage, type ApplicationImage } from "@/lib/application-review";
+import { MAX_OCR_CONCURRENCY, processApplicationBatch, type ImageTask } from "@/lib/application/application-processor";
+import { isProcessedImage, type ApplicationImage } from "@/lib/application/application-review";
 import type { ImageLabel } from "@/lib/label-evidence";
-import { OCR_PARAMETERS } from "@/lib/ocr-config";
-import { scanBrowserLabel } from "@/lib/scan-label-browser";
-import type { ScanPass } from "@/lib/scan-label";
+import { OCR_PARAMETERS } from "@/lib/ocr/ocr-config";
+import { scanBrowserLabel } from "@/lib/ocr/scan-label-browser";
+import type { ScanPass } from "@/lib/ocr/scan-label";
 
 export type UploadedImage = ApplicationImage & {
   file: File;

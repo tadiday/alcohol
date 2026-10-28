@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { MAX_OCR_CONCURRENCY } from "@/lib/application-processor";
+import { MAX_OCR_CONCURRENCY } from "@/lib/application/application-processor";
 import type { ImageLabel } from "@/lib/label-evidence";
 import { SAMPLE_LABELS, type SampleLabel } from "@/lib/sample-labels";
 import type { UploadedImage } from "../hooks/use-label-images";

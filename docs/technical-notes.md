@@ -35,7 +35,7 @@ A bounded queue processes at most **two images concurrently**, with one OCR work
 
 The UI displays the latest run's elapsed application latency and cumulative processing time for the current application session, including initialization, queue wait, failed attempts, and retries. Cumulative time can include images later removed; clearing the set resets the timing. It excludes time spent editing the form between processing runs. Parallel image durations are not added together to estimate elapsed latency.
 
-The UI reviews one application at a time. Multi-file uploads are explicitly assigned to its visible ID. The reusable [processApplicationBatch](../lib/application-processor.ts) function also accepts multiple applications, each with its own image list and explicit `applicationId` on every image. It rejects mismatched associations and duplicate IDs before OCR, maintains one concurrency bound across the entire batch, and returns results/latency grouped by application ID. It never infers applications from file order, name, or side label. There is currently no multi-application CSV/manifest import screen.
+The UI reviews one application at a time. Multi-file uploads are explicitly assigned to its visible ID. The reusable [processApplicationBatch](../lib/application/application-processor.ts) function also accepts multiple applications, each with its own image list and explicit `applicationId` on every image. It rejects mismatched associations and duplicate IDs before OCR, maintains one concurrency bound across the entire batch, and returns results/latency grouped by application ID. It never infers applications from file order, name, or side label. There is currently no multi-application CSV/manifest import screen.
 
 Adaptive OCR follows this sequence: scan once, locate likely sideways text from uncertain fragments, read small rotated regions, and expand crops when text touches an edge. Full-image rotation remains a fallback for difficult layouts. All useful field evidence from accepted scans is retained.
 
@@ -107,12 +107,12 @@ The sample artwork is fictional and lives in [public/samples](../public/samples)
 - [app/components/label-images.tsx](../app/components/label-images.tsx): uploads, per-image previews/status, side labels, warning corrections, and sample controls.
 - [app/components/application-results.tsx](../app/components/application-results.tsx): findings, status summaries, and OCR diagnostics.
 - [app/components/application-evidence.tsx](../app/components/application-evidence.tsx): source evidence list and image-box viewer.
-- [lib/application-review.ts](../lib/application-review.ts): application-level evidence grouping, conflict detection, strict warning aggregation, and incomplete-evidence handling.
-- [lib/application-processor.ts](../lib/application-processor.ts): bounded image queue and explicit multi-application association.
+- [lib/application/application-review.ts](../lib/application/application-review.ts): application-level evidence grouping, conflict detection, strict warning aggregation, and incomplete-evidence handling.
+- [lib/application/application-processor.ts](../lib/application/application-processor.ts): bounded image queue and explicit multi-application association.
 - [lib/label-evidence.ts](../lib/label-evidence.ts): evidence/source types and original-coordinate box transforms.
-- [lib/field-extractor.ts](../lib/field-extractor.ts), [lib/ocr-layout.ts](../lib/ocr-layout.ts): field candidates, spatial panels, confidence, and source observations.
-- [lib/label-verifier.ts](../lib/label-verifier.ts): existing deterministic field comparisons and strict warning rules.
-- [lib/scan-label.ts](../lib/scan-label.ts), [lib/scan-label-browser.ts](../lib/scan-label-browser.ts): adaptive OCR and browser image preprocessing.
+- [lib/verification/field-extractor.ts](../lib/verification/field-extractor.ts), [lib/ocr/ocr-layout.ts](../lib/ocr/ocr-layout.ts): field candidates, spatial panels, confidence, and source observations.
+- [lib/verification/label-verifier.ts](../lib/verification/label-verifier.ts): existing deterministic field comparisons and strict warning rules.
+- [lib/ocr/scan-label.ts](../lib/ocr/scan-label.ts), [lib/ocr/scan-label-browser.ts](../lib/ocr/scan-label-browser.ts): adaptive OCR and browser image preprocessing.
 
 ## Remaining limitations
 

@@ -84,6 +84,28 @@ npm run samples:check
 
 Tests cover field comparisons, strict warning rules, rotations, combined front/back evidence, wraparound labels, duplicate/conflicting readings, missing fields, failures/retries, source coordinates, application IDs, and bounded concurrency. `samples:check` runs real OCR on the bundled fictional artwork; its first run downloads English OCR data. Unit tests require no network.
 
+## Project layout
+
+```text
+app/
+  page.tsx             Application state and review workflow
+  components/          Form, image cards, findings, and evidence viewer
+  hooks/               Browser image state and OCR worker lifecycle
+lib/
+  application/         Combine images, detect conflicts, and queue processing
+  ocr/                 Recognize text, group layouts, and handle rotations
+  verification/        Extract fields and compare values/warning text
+  label-evidence.ts    Shared source-image types and coordinate transforms
+  sample-labels.ts     Expected values and metadata for demo samples
+public/samples/        Fictional label artwork (PNG and editable SVG)
+scripts/               Generate samples and run real-OCR checks
+docs/                  Detailed technical notes
+```
+
+Tests live beside the modules they cover as `*.test.ts`; run them together with `npm test`. Framework, TypeScript, lint, and dependency configuration stays in the repository root.
+
+For a code review, start with [the page](app/page.tsx), then [application review](lib/application/application-review.ts), [field comparisons](lib/verification/label-verifier.ts), and [OCR scanning](lib/ocr/scan-label.ts). The [technical notes](docs/technical-notes.md#implementation) describe each module.
+
 ## Future work
 
 **Batch uploads across multiple applications** are the next planned enhancement. The UI currently supports multiple images for one application. The existing processing core can already associate images with multiple application IDs, but has no batch-import interface.

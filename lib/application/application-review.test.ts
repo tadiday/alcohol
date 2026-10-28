@@ -2,9 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { reviewApplication, type ApplicationImage } from "./application-review";
 import { processApplicationBatch } from "./application-processor";
-import { GOVERNMENT_WARNING, type ApplicationFields } from "./label-verifier";
-import { findWarningPanel, type LabelScan, type OcrPage } from "./scan-label";
-import { originalImageBox, type ImageLabel } from "./label-evidence";
+import { GOVERNMENT_WARNING, type ApplicationFields } from "../verification/label-verifier";
+import { findWarningPanel, type LabelScan, type OcrPage } from "../ocr/scan-label";
+import { originalImageBox, type ImageLabel } from "../label-evidence";
 
 const expected: ApplicationFields = {
   brandName: "OLD TOM DISTILLERY", classType: "Kentucky Straight Bourbon Whiskey", alcoholContent: "45%",

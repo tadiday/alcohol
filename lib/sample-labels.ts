@@ -1,4 +1,4 @@
-import type { ApplicationFields } from "./label-verifier";
+import type { ApplicationFields } from "./verification/label-verifier";
 
 export const SAMPLE_APPLICATION: ApplicationFields = {
   brandName: "OLD TOM DISTILLERY",

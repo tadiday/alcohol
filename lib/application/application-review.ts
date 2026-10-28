@@ -1,8 +1,8 @@
-import { extractSpatialFields } from "./field-extractor";
+import { extractSpatialFields } from "../verification/field-extractor";
 import { FIELD_LABELS, GOVERNMENT_WARNING, extractWarningBlock, normalizeText, numericValues, verifyGovernmentWarning, verifyLabel,
-  type ApplicationFields, type ComparisonResult, type ExtractedField, type ExtractedFields, type FieldKey } from "./label-verifier";
-import type { ImageLabel, ImageSource, ValueEvidence } from "./label-evidence";
-import type { LabelScan } from "./scan-label";
+  type ApplicationFields, type ComparisonResult, type ExtractedField, type ExtractedFields, type FieldKey } from "../verification/label-verifier";
+import type { ImageLabel, ImageSource, ValueEvidence } from "../label-evidence";
+import type { LabelScan } from "../ocr/scan-label";
 
 export type ApplicationImage = {
   id: string;

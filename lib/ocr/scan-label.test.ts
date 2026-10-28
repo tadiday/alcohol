@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { GOVERNMENT_WARNING, verifyGovernmentWarning } from "./label-verifier";
+import { GOVERNMENT_WARNING, verifyGovernmentWarning } from "../verification/label-verifier";
 import { findUncertainRegions, findWarningPanel, scanLabelOrientations, type OcrPage, type Rotation } from "./scan-label";
 
 function page(text: string, confidence = 95): OcrPage {

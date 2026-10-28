@@ -1,5 +1,5 @@
-import { FIELD_LABELS, type ApplicationFields, type FieldKey } from "@/lib/label-verifier";
-import type { ApplicationImage, ApplicationReview } from "@/lib/application-review";
+import { FIELD_LABELS, type ApplicationFields, type FieldKey } from "@/lib/verification/label-verifier";
+import type { ApplicationImage, ApplicationReview } from "@/lib/application/application-review";
 import type { ValueEvidence } from "@/lib/label-evidence";
 import { EvidenceList } from "./application-evidence";
 

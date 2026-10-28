@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { extractSpatialFields } from "./field-extractor";
 import { GOVERNMENT_WARNING, verifyLabel, type ApplicationFields } from "./label-verifier";
-import type { EvidencePage, OcrLine } from "./scan-label";
+import type { EvidencePage, OcrLine } from "../ocr/scan-label";
 
 function line(text: string, x: number, y: number, width: number, height = 24, confidence = 95): OcrLine {
   return { text, confidence, bbox: { x0: x, y0: y, x1: x + width, y1: y + height } };
