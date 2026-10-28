@@ -2,19 +2,45 @@
 
 A standalone prototype for comparing an application's expected alcohol-label fields with OCR evidence from one or more label images. Images and OCR remain in the browser; no hosted inference API or image-storage server is used.
 
+**Live demo:** https://tadiday-alcohol.vercel.app/
+
+Built with Next.js, React, TypeScript, Tailwind CSS, and Tesseract.js. The app assists a reviewer; it does not issue a regulatory approval.
+
 ## Setup
 
+Prerequisites: **Node.js 24.x**, npm, and a modern browser with Web Worker, WebAssembly, canvas, and `createImageBitmap` support. Chrome was used for deployment checks. Internet access is needed to install dependencies and initially download OCR assets. No API key, `.env` file, database, or paid inference service is required.
+
 ```bash
-npm install
+git clone https://github.com/tadiday/alcohol.git
+cd alcohol
+npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. For production:
+Open http://localhost:3000. If you already have the repository, start with `npm ci` in its root directory. Stop the server with Ctrl+C.
+
+To build and serve locally in production mode:
 
 ```bash
 npm run build
-npm start
+npm run start
 ```
+
+### Try the app without supplying an image
+
+On the live demo or local app, select a button under **Try a sample application**, wait for processing to finish, then select **Run verification**. Sample buttons supply the artwork and expected values together, replacing any current image set.
+
+| Sample | Expected result |
+| --- | --- |
+| Matching label | Five field matches; government warning needs visual formatting review even though its wording matches. |
+| Wrong alcohol content | Alcohol-content mismatch: the application expects 45%, while the image shows 40%. |
+| Invalid warning heading | Warning mismatch because the heading uses title case rather than `GOVERNMENT WARNING:`. |
+
+### Deploy to Vercel
+
+Import this GitHub repository into Vercel and use the **Next.js** framework preset, repository root (`./`), Node.js **24.x**, and `npm run build`. Leave installation and output-directory settings at their detected defaults. The current app needs no environment variables. The live demo uses this deployment path.
+
+After deploying, test the sample buttons and an actual image upload in a fresh browser session. OCR runs on the visitor's device, so a successful server build alone does not confirm that worker, WebAssembly, and English-language downloads work in that browser/network.
 
 ## Review one application with multiple images
 
@@ -29,6 +55,17 @@ Every image carries its application ID and a separate image ID. The application 
 Manual field corrections require a successfully processed source image; a single available image is selected automatically. Warning transcriptions can be corrected independently in each image card. Corrections are identified as manual and do not claim automated confidence. Adding an image preserves existing corrections; removing images clears corrections and prior displayed results so removed evidence cannot support a decision. Retrying a failed image retains successful scans.
 
 The sample-application buttons replace the current image set and populate the Old Tom expected fields. Each built-in sample is one complete wraparound label: matching details, incorrect ABV, or an invalid title-case warning heading.
+
+### Understand the findings
+
+| Finding | Meaning / reviewer action |
+| --- | --- |
+| Match | The recognized value agrees with the application's expected value under the comparison rules. Inspect the source if the reading looks suspicious. |
+| Mismatch | A recognized value or warning text differs from the expected rule. Check the artwork before treating an OCR discrepancy as a label error. |
+| Needs review | Evidence is uncertain, conflicting, incomplete, or requires a visual formatting check. Inspect the listed sources and correct transcriptions only after checking the image. |
+| Not detected in supplied images | No value was recognized after every supplied image processed successfully. This is not proof that the physical label lacks that field. |
+
+**Run verification** is available once an image is attached and processing has stopped. A processing failure still allows inspection of partial evidence, but blocks a complete conclusion. A matching warning intentionally remains **Needs review** because OCR cannot confirm boldness, legibility, or physical print size.
 
 ## Combined evidence and verification rules
 
@@ -57,7 +94,35 @@ The UI reviews one application at a time. Multi-file uploads are explicitly assi
 
 The same adaptive OCR remains in use: scan once, locate likely sideways text from uncertain fragments, read small rotated regions, and expand crops when text touches an edge. Full-image rotation remains a fallback for difficult layouts. All useful field evidence from accepted scans is retained.
 
-One local integration run processed split front/back sample artwork in **0.85 seconds** on an already initialized Node worker with concurrency 1. This is a small clean fixture, not a browser/cold-start or real-photo latency guarantee. Multi-image latency grows with image count and complexity; approximately five seconds is a target, not a guaranteed limit.
+Multi-image latency grows with image count and complexity; approximately five seconds is a target, not a guaranteed limit. The two-worker bound limits active OCR, but does not cap the number or total decoded size of attached images.
+
+## Design decisions and tradeoffs
+
+| Decision | Benefit | Cost / tradeoff |
+| --- | --- | --- |
+| Browser-based Tesseract OCR | Label images stay on the user's device; no inference credentials or per-request inference charges. | Speed and memory use depend on the device. Initial OCR assets require network access, and difficult typography remains unreliable. |
+| Spatial extraction and deterministic comparisons | Explicit numeric/unit rules and source evidence make findings traceable and repeatable. | Layout and field-role heuristics need maintenance; they do not understand every brand, product description, or regulatory exception. No LLM or hosted vision model is used. |
+| Adaptive rotated-region reads | Recovers sideways warning panels without always scanning all four full-image orientations. | Region detection can miss a panel or trigger extra work. Fallback rotations increase latency, and arbitrary perspective/curved surfaces are not corrected. |
+| At most two reusable OCR workers | Multiple images can make progress while bounding active OCR work. | Workers consume memory, and larger applications queue. Two workers may still be expensive on low-memory mobile devices. |
+| Combine evidence with explicit application/image IDs | Front/back evidence complements each other; repeated matching values produce one finding while preserving their sources. | Conflicting readings require human review; no automatic winner is selected, even if one reading looks more plausible. |
+| Conservative incomplete-evidence and warning rules | Failed scans cannot produce an overall pass or definitive missing-field finding. Warning text is checked strictly. | Clean-looking labels can still require manual review, and OCR punctuation errors can appear as mismatches. |
+| In-memory review session | Simple deployment with no image-storage backend or account setup. | Reloading loses the review. There is no saved audit trail or resumable submission. |
+
+The prototype prioritizes one application's evidence and review workflow. A batch-processing core is available, but a multi-application import screen and persisted workflow were left outside the current scope.
+
+## Observed deployment checks
+
+On **October 28, 2026**, the deployed URL was checked in a fresh headless Chrome context using real OCR asset downloads and actual image recognition. These are individual observations, not an accuracy benchmark or a performance guarantee:
+
+| Scenario | Observed result |
+| --- | --- |
+| First front/back scan in a fresh browser context | Both images processed in approximately **3.0 s**, including OCR initialization; combined evidence and source highlights worked. |
+| Built-in sample buttons | All three produced their expected findings. First sample scan took **2.7 s**; subsequent sample scans took **0.5–0.6 s** in that session. |
+| Supplied Citrus Stomp artwork with a sideways warning | Scanned in **2.4 s** with initialized workers; warning wording, 8.6% ABV, 250 mL, class/type, and producer were read. The brand appeared as `CITRUS _ STOMP` and correctly required review. |
+| Multi-image edge cases | Conflicting ABVs, repeated matching values, removal, corrupt-image errors/retry, and a single wraparound image behaved as expected. |
+| Access and layout | The site opened without login. No horizontal overflow was observed at a 390 px viewport; no uncaught JavaScript errors occurred in the tested flows. |
+
+The browser smoke checks were run separately from the repository's automated test commands. They do not establish cross-browser support or representative accuracy on real bottle photographs.
 
 ## Tests and sample artwork
 
@@ -91,7 +156,11 @@ The sample artwork is fictional and lives in [public/samples](public/samples). E
 
 ## Implementation
 
-- [app/page.tsx](app/page.tsx): application input, image collection, worker pool, progress, retry, corrections, and combined review.
+- [app/page.tsx](app/page.tsx): application state, corrections, sample loading, and coordination of the review workflow.
+- [app/hooks/use-label-images.ts](app/hooks/use-label-images.ts): image collection, preview cleanup, OCR worker lifecycle, progress, retry processing, and latency.
+- [app/components/application-form.tsx](app/components/application-form.tsx): expected fields, detected values, and correction-source selection.
+- [app/components/label-images.tsx](app/components/label-images.tsx): uploads, per-image previews/status, side labels, warning corrections, and sample controls.
+- [app/components/application-results.tsx](app/components/application-results.tsx): findings, status summaries, and OCR diagnostics.
 - [app/components/application-evidence.tsx](app/components/application-evidence.tsx): source evidence list and image-box viewer.
 - [lib/application-review.ts](lib/application-review.ts): application-level evidence grouping, conflict detection, strict warning aggregation, and incomplete-evidence handling.
 - [lib/application-processor.ts](lib/application-processor.ts): bounded image queue and explicit multi-application association.
@@ -100,10 +169,28 @@ The sample artwork is fictional and lives in [public/samples](public/samples). E
 - [lib/label-verifier.ts](lib/label-verifier.ts): existing deterministic field comparisons and strict warning rules.
 - [lib/scan-label.ts](lib/scan-label.ts), [lib/scan-label-browser.ts](lib/scan-label-browser.ts): adaptive OCR and browser image preprocessing.
 
+## AI assistance
+
+I used OpenAI Codex to assist with implementation, debugging, test creation, and documentation.
+
 ## Remaining limitations
 
 - This is an OCR-assisted prototype with human review, not a production regulatory approval system. Candidate roles, layout detection, and confidence thresholds are heuristics; engine scores are not calibrated probabilities.
+- Only the English OCR model is loaded. Multilingual labels have not been evaluated. The checks cover the implemented application fields and standard warning text, not every product-specific labeling requirement or exception.
 - Stylized brands, small or curved text, glare, perspective distortion, arbitrary angles, and unusual panels can remain uncertain. Image labels do not compensate for missing or unreadable artwork. Conflicting OCR readings require review rather than automatic adjudication.
+- Accuracy has been checked with fictional sample artwork and limited supplied artwork, not a representative labeled dataset. There is no measured precision/recall or guarantee that a successful scan recognized every field correctly.
 - Image removal explicitly changes the supplied evidence set; the app cannot verify that every physical label panel was submitted.
 - Default Tesseract worker/runtime/language assets require external downloads. Restricted-network deployments must host them locally; no fully offline bundle or service worker is configured.
+- The 10 MB limit applies per file; there is no total image-count or decoded-memory budget. Large image sets can exhaust browser memory despite bounded OCR concurrency. There is no user-facing cancellation control, and image changes wait for the active run to finish.
 - There is no persistence, submission workflow, COLA integration, or multi-application batch-import UI. Review state is lost on page reload.
+
+## Troubleshooting
+
+| Problem | What to check |
+| --- | --- |
+| Run verification is disabled | Enter an application ID, attach an image or select a sample, and wait for the active scan to finish. Entering expected values alone does not supply image evidence. |
+| An image fails or contains no readable text | Read the error on its image card. Retry a transient failure, or remove and replace the image with a clearer crop in a supported format under 10 MB. Other successful images remain available. |
+| OCR initialization fails | Check network access to the default Tesseract CDN assets, browser support, and browser console/network errors. A fresh session may need to download the OCR engine and English model. |
+| OCR text contains symbols or misses a warning | Inspect the highlighted image evidence and raw diagnostics. Small, stylized, or sideways text may be misread. Use a clearer image, add a close-up under the same application, or transcribe the value after checking the artwork. |
+| A matching warning still needs review | This is expected: inspect boldness, legibility, and physical print size manually. |
+| Results disappeared after refresh | Review state is held in memory. Reloading starts a new session. |

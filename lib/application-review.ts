@@ -1,6 +1,6 @@
 import { extractSpatialFields } from "./field-extractor";
 import { FIELD_LABELS, GOVERNMENT_WARNING, extractWarningBlock, normalizeText, numericValues, verifyGovernmentWarning, verifyLabel,
-  type ApplicationFields, type ComparisonResult, type ExtractedFields, type FieldKey } from "./label-verifier";
+  type ApplicationFields, type ComparisonResult, type ExtractedField, type ExtractedFields, type FieldKey } from "./label-verifier";
 import type { ImageLabel, ImageSource, ValueEvidence } from "./label-evidence";
 import type { LabelScan } from "./scan-label";
 
@@ -14,6 +14,13 @@ export type ApplicationImage = {
   error?: string;
   durationMs?: number;
 };
+
+export type ProcessedApplicationImage = ApplicationImage & { status: "success"; scan: LabelScan };
+
+export function isProcessedImage<T extends ApplicationImage>(image: T): image is T & ProcessedApplicationImage {
+  return image.status === "success" && image.scan !== undefined;
+}
+
 export type ApplicationReview = {
   applicationId: string;
   complete: boolean;
@@ -24,6 +31,15 @@ export type ApplicationReview = {
   processedImages: number;
   totalImages: number;
 };
+
+type ReviewOptions = {
+  isImported?: boolean;
+  overrides?: Partial<ApplicationFields>;
+  warningCorrections?: Record<string, string>;
+  correctionSources?: Partial<Record<FieldKey, string>>;
+};
+
+const FIELD_KEYS = Object.keys(FIELD_LABELS) as FieldKey[];
 
 export function validateImageAssociation(applicationId: string, images: Pick<ApplicationImage, "id" | "applicationId">[]) {
   if (!applicationId.trim()) throw new Error("An application ID is required.");
@@ -67,62 +83,52 @@ function warningIdentity(text: string): string {
     /\b(?:Surgeon|SURGEON) (?:General|GENERAL)\b/.test(normalized), normalized.toLowerCase()]);
 }
 
-export function reviewApplication(applicationId: string, expected: ApplicationFields, images: ApplicationImage[], options: {
-  isImported?: boolean;
-  overrides?: Partial<ApplicationFields>;
-  warningCorrections?: Record<string, string>;
-  correctionSources?: Partial<Record<FieldKey, string>>;
-} = {}): ApplicationReview {
-  validateImageAssociation(applicationId, images);
-  const successful = images.filter((image) => image.status === "success" && image.scan);
-  const complete = images.length > 0 && successful.length === images.length;
-  const unavailable = images.filter((image) => image.status !== "success" || !image.scan);
-  const perImage = successful.map((image) => ({ image,
-    fields: extractSpatialFields(image.scan!.pages.map((page) => ({ ...page, image: imageSource(image) }))),
-  }));
-  const conflicts = new Set<FieldKey>();
-  const fields = {} as ExtractedFields;
-  for (const key of Object.keys(FIELD_LABELS) as FieldKey[]) {
-    const readings = perImage.map(({ image, fields }) => ({ image, field: fields[key] })).filter(({ field }) => field.value.trim());
-    const observations = uniqueEvidence(readings.flatMap(({ image, field }) => (
-      field.observations?.length ? field.observations.map((entry) => ({ ...entry, uncertain: field.uncertain || entry.uncertain }))
-        : [{ value: field.value, text: field.evidence ?? field.value, confidence: field.confidence ?? null,
-          image: imageSource(image), rotation: 0, uncertain: field.uncertain }]
-    )));
-    const groups = new Map<string, ValueEvidence[]>();
-    for (const observation of observations) {
-      const identity = fieldValueIdentity(key, observation.value);
-      groups.set(identity, [...(groups.get(identity) ?? []), observation]);
-    }
-    const variants = [...groups.values()];
-    if (variants.length > 1) conflicts.add(key);
-    const trusted = observations.filter((entry) => !entry.uncertain);
-    fields[key] = {
-      value: variants.map((group) => group[0].value).join(" | "),
-      uncertain: variants.length !== 1 || trusted.length === 0,
-      confidence: observations.length ? Math.max(...observations.map((entry) => entry.confidence ?? 0)) : null,
-      evidence: observations.map((entry) => `${entry.image?.imageName ?? "Image"}: ${entry.text}`).join("\n\n"),
-      source: [...new Set(observations.map((entry) => entry.image?.imageName))].filter(Boolean).join(", "), observations,
-      notes: variants.length > 1 ? ["Conflicting values were read in the supplied images. Review every source; no value was selected as authoritative."]
-        : readings.flatMap(({ field }) => field.notes ?? []),
-    };
+function groupEvidence(observations: ValueEvidence[], identify: (entry: ValueEvidence) => string): ValueEvidence[][] {
+  const groups = new Map<string, ValueEvidence[]>();
+  for (const observation of observations) {
+    const identity = identify(observation);
+    const group = groups.get(identity);
+    if (group) group.push(observation);
+    else groups.set(identity, [observation]);
   }
+  return [...groups.values()];
+}
 
-  const results = verifyLabel(expected, "", { fields, isImported: options.isImported, overrides: options.overrides });
+function mergeFieldReadings(key: FieldKey, readings: { image: ProcessedApplicationImage; field: ExtractedField }[]) {
+  const observations = uniqueEvidence(readings.flatMap(({ image, field }) => (
+    field.observations?.length ? field.observations.map((entry) => ({ ...entry, uncertain: field.uncertain || entry.uncertain }))
+      : [{ value: field.value, text: field.evidence ?? field.value, confidence: field.confidence ?? null,
+        image: imageSource(image), rotation: 0, uncertain: field.uncertain }]
+  )));
+  const variants = groupEvidence(observations, (entry) => fieldValueIdentity(key, entry.value));
+  const conflict = variants.length > 1;
+  const field: ExtractedField = {
+    value: variants.map((group) => group[0].value).join(" | "),
+    uncertain: variants.length !== 1 || !observations.some((entry) => !entry.uncertain),
+    confidence: observations.length ? Math.max(...observations.map((entry) => entry.confidence ?? 0)) : null,
+    evidence: observations.map((entry) => `${entry.image?.imageName ?? "Image"}: ${entry.text}`).join("\n\n"),
+    source: [...new Set(observations.map((entry) => entry.image?.imageName))].filter(Boolean).join(", "),
+    observations,
+    notes: conflict ? ["Conflicting values were read in the supplied images. Review every source; no value was selected as authoritative."]
+      : readings.flatMap(({ field }) => field.notes ?? []),
+  };
+  return { field, conflict };
+}
+
+function collectWarnings(images: ProcessedApplicationImage[], corrections: Record<string, string> = {}): ValueEvidence[] {
   // Presence is evaluated over the application, never against a required side.
-  const warnings = successful.flatMap((image): ValueEvidence[] => {
-    const correction = options.warningCorrections?.[image.id];
-    const scan = image.scan!;
+  return images.flatMap((image): ValueEvidence[] => {
+    const correction = corrections[image.id];
+    const scan = image.scan;
     const text = correction ?? scan.warning?.text ?? "";
     if (!text.trim()) return [];
     return [{ value: text, text, confidence: correction !== undefined ? null : scan.warning?.confidence ?? scan.confidence,
       image: imageSource(image), bbox: scan.warning?.bbox, rotation: scan.warning?.rotation ?? 0 }];
   });
-  const warningGroups = new Map<string, ValueEvidence[]>();
-  for (const warning of warnings) {
-    const identity = warningIdentity(warning.text);
-    warningGroups.set(identity, [...(warningGroups.get(identity) ?? []), warning]);
-  }
+}
+
+function reviewWarnings(warnings: ValueEvidence[]): ComparisonResult {
+  const warningGroups = groupEvidence(warnings, (entry) => warningIdentity(entry.text));
   const selected = [...warnings].sort((a, b) => (b.confidence ?? 100) - (a.confidence ?? 100))[0];
   const warningResult: ComparisonResult = selected ? verifyGovernmentWarning(selected.text) : {
     field: "Government Warning", status: "needs-review" as const, expected: GOVERNMENT_WARNING, extracted: "", notes: [],
@@ -135,15 +141,44 @@ export function reviewApplication(applicationId: string, expected: ApplicationFi
     warningResult.status = "needs-review";
     warningResult.notes.push("The warning reading has low OCR confidence. Check the source image.");
   }
-  if (warningGroups.size > 1) {
+  if (warningGroups.length > 1) {
     warningResult.status = "needs-review";
-    warningResult.extracted = [...warningGroups.values()].map((group) => group[0].text).join("\n\n");
+    warningResult.extracted = warningGroups.map((group) => group[0].text).join("\n\n");
     warningResult.notes = ["The supplied images contain conflicting warning readings. Review each source and its exact wording and heading."];
   }
-  results[results.length - 1] = warningResult;
+  return warningResult;
+}
+
+export function reviewApplication(
+  applicationId: string,
+  expected: ApplicationFields,
+  images: ApplicationImage[],
+  options: ReviewOptions = {},
+): ApplicationReview {
+  validateImageAssociation(applicationId, images);
+  const successful = images.filter(isProcessedImage);
+  const complete = images.length > 0 && successful.length === images.length;
+  const unavailable = images.filter((image) => !isProcessedImage(image));
+  const perImage = successful.map((image) => ({
+    image,
+    fields: extractSpatialFields(image.scan.pages.map((page) => ({ ...page, image: imageSource(image) }))),
+  }));
+  const conflicts = new Set<FieldKey>();
+  const fields = {} as ExtractedFields;
+  for (const key of FIELD_KEYS) {
+    const readings = perImage.map(({ image, fields }) => ({ image, field: fields[key] }))
+      .filter(({ field }) => field.value.trim());
+    const merged = mergeFieldReadings(key, readings);
+    fields[key] = merged.field;
+    if (merged.conflict) conflicts.add(key);
+  }
+
+  const results = verifyLabel(expected, "", { fields, isImported: options.isImported, overrides: options.overrides });
+  const warnings = collectWarnings(successful, options.warningCorrections);
+  results[results.length - 1] = reviewWarnings(warnings);
 
   for (const result of results) {
-    const key = (Object.keys(FIELD_LABELS) as FieldKey[]).find((key) => FIELD_LABELS[key] === result.field);
+    const key = FIELD_KEYS.find((key) => FIELD_LABELS[key] === result.field);
     let corrected = false;
     if (key && options.overrides?.[key] !== undefined) {
       const sourceId = options.correctionSources?.[key] ?? (successful.length === 1 ? successful[0].id : undefined);
