@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200">
+  <rect width="1600" height="1200" fill="#fffdf6"/>
+  <rect x="45" y="45" width="1510" height="1110" rx="8" fill="none" stroke="#58412a" stroke-width="4"/>
+  <g fill="#191919" font-family="Arial, Helvetica, sans-serif">
+    <text x="800" y="180" font-size="56" font-weight="700" text-anchor="middle">OLD TOM DISTILLERY</text>
+    <path d="M190 235 H1410" stroke="#58412a" stroke-width="2"/>
+    <text x="800" y="325" font-size="48" font-weight="400" text-anchor="middle">Kentucky Straight Bourbon Whiskey</text>
+    <text x="800" y="430" font-size="48" font-weight="400" text-anchor="middle">45% Alc./Vol. (90 Proof)</text>
+    <text x="800" y="520" font-size="44" font-weight="400" text-anchor="middle">750 mL</text>
+    <text x="800" y="620" font-size="36" font-weight="400" text-anchor="middle">Bottled by Old Tom Distillery, Louisville, KY</text>
+    <text x="800" y="680" font-size="32" font-weight="400" text-anchor="middle">Product of United States</text>
+    <path d="M112 735 H1488" stroke="#58412a" stroke-width="2"/>
+    <text x="112" y="800" font-size="38" font-weight="700" text-anchor="start">GOVERNMENT WARNING:</text>
+    <text x="112" y="858" font-size="32" font-weight="400" text-anchor="start">(1) According to the Surgeon General, women should not drink alcoholic</text>
+    <text x="112" y="907" font-size="32" font-weight="400" text-anchor="start">beverages during pregnancy because of the risk of birth defects. (2)</text>
+    <text x="112" y="956" font-size="32" font-weight="400" text-anchor="start">Consumption of alcoholic beverages impairs your ability to drive a car or</text>
+    <text x="112" y="1005" font-size="32" font-weight="400" text-anchor="start">operate machinery, and may cause health problems.</text>
+    <text x="800" y="1110" font-size="23" font-weight="400" text-anchor="middle">FICTIONAL DEMO LABEL - FOR SOFTWARE TESTING ONLY</text>
+  </g>
+</svg>

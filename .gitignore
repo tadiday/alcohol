@@ -1,28 +1,41 @@
-# Secrets and local configuration
-.env
-.env.*
-!.env.example
-*.pem
-*.key
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Dependencies and generated outputs
-node_modules/
-dist/
-build/
-coverage/
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Local uploads and temporary files
-uploads/
-tmp/
-*.log
+# testing
+/coverage
 
-# Editor and OS files
-.idea/
-.vscode/
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
 .DS_Store
-Thumbs.db
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
