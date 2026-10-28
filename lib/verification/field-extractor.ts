@@ -14,6 +14,8 @@ const address = /,\s*[A-Z]{2}\b|\b\d{5}(?:-\d{4})?\b|\b(?:street|road|avenue|lan
 const marketingCopy = /\b(?:first|finest|perfect|best|celebrate|enjoy|discover|cocktail|sipping)\b/i;
 const productionStatement = /^(?:produced|distilled|brewed|bottled|made|canned)\s+(?:in|by)\b/i;
 
+// Keep plausible alternatives as evidence so ranking cannot conceal a conflicting
+// numeric value or a similarly prominent text candidate.
 function choose(candidates: Candidate[], key: FieldKey): ExtractedField {
   if (!candidates.length) return { value: "", uncertain: true, confidence: null, evidence: "", notes: ["No reliable label text was found for this field. Check the image."] };
   candidates.sort((a, b) => b.priority - a.priority || (b.confidence ?? 0) - (a.confidence ?? 0));
@@ -34,6 +36,11 @@ function choose(candidates: Candidate[], key: FieldKey): ExtractedField {
   return result;
 }
 
+/**
+ * Infer field candidates from OCR text and geometry, independently of form values.
+ * Preserve source boxes and field-specific confidence; ambiguous, clipped, or noisy
+ * readings stay uncertain instead of being completed from expected application data.
+ */
 export function extractSpatialFields(pages: EvidencePage[]): ExtractedFields {
   const candidates: Record<FieldKey, Candidate[]> = {
     brandName: [], classType: [], alcoholContent: [], netContents: [], producerName: [], countryOfOrigin: [],

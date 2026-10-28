@@ -26,6 +26,10 @@ function validateFile(file: File) {
   }
 }
 
+/**
+ * Own uploaded-image state, reusable OCR workers, progress, and processing latency.
+ * Preview URLs and workers are released when the review screen unmounts.
+ */
 export function useLabelImages() {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -51,6 +55,7 @@ export function useLabelImages() {
     };
   }, []);
 
+  // Scan only new or retried images; retain the other images' successful evidence.
   const processImages = useCallback(async (snapshot: UploadedImage[], targetIds: string[], applicationId: string) => {
     if (busy.current) return;
     busy.current = true;
@@ -110,6 +115,7 @@ export function useLabelImages() {
           });
         });
       } catch (error) {
+        // A retry must start with a fresh worker after a recognition failure.
         const failed = workers.current[slot];
         workers.current[slot] = null;
         await failed?.terminate().catch(() => {});

@@ -11,6 +11,7 @@ import { ApplicationResults, ScanDiagnostics } from "./components/application-re
 import { LabelImages } from "./components/label-images";
 import { useLabelImages, type UploadedImage } from "./hooks/use-label-images";
 
+/** Coordinate application inputs, manual corrections, and the combined evidence review. */
 export default function Home() {
   const [applicationId, setApplicationId] = useState("APP-001");
   const [expected, setExpected] = useState<ApplicationFields>(SAMPLE_APPLICATION);
@@ -54,6 +55,7 @@ export default function Home() {
 
   function handleRemove(id: string) {
     scanner.removeImage(id);
+    // Removing a source invalidates corrections and any previously displayed review.
     clearCorrections();
   }
 

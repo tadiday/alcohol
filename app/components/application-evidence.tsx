@@ -25,6 +25,10 @@ export function EvidenceList({ observations, onSelect }: {
   </details>;
 }
 
+/**
+ * Show the original source image, scaling its evidence box with the displayed image.
+ * Manual evidence without a box still opens its source without inventing a location.
+ */
 export function EvidenceViewer({ evidence, imageUrl, onClose }: {
   evidence: ValueEvidence;
   imageUrl: string;

@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { GOVERNMENT_WARNING, verifyGovernmentWarning } from "../verification/label-verifier";
 import { findUncertainRegions, findWarningPanel, scanLabelOrientations, type OcrPage, type Rotation } from "./scan-label";
 
+// Controlled recognizer responses exercise scan order and crop/rotation decisions
+// without downloading an OCR model or relying on engine accuracy.
 function page(text: string, confidence = 95): OcrPage {
   return {
     text,

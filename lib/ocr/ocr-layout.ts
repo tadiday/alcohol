@@ -2,6 +2,10 @@ import type { OcrLine } from "./scan-label";
 
 export type TextPanel = { lines: OcrLine[] };
 
+/**
+ * Group nearby, aligned lines with similar heights into reading panels so text
+ * from separate columns is less likely to be combined into a single field.
+ */
 export function groupTextPanels(lines: OcrLine[]): TextPanel[] {
   const valid = lines.filter((line) => line.text.trim() && line.bbox.x1 > line.bbox.x0 && line.bbox.y1 > line.bbox.y0);
   const remaining = new Set(valid);

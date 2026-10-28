@@ -22,6 +22,7 @@ function wrapWords(text: string, maxCharacters: number): string[] {
   return lines;
 }
 
+/** Generate reproducible SVG/PNG fixtures, varying ABV or heading case for mismatch demos. */
 async function main() {
   const outputDirectory = new URL("../public/samples/", import.meta.url);
   await mkdir(outputDirectory, { recursive: true });

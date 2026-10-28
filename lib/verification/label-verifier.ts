@@ -51,6 +51,7 @@ export function normalizeText(value: string): string {
 
 type NumericValues = { values: number[]; evidence: string; invalid: boolean };
 
+/** Normalize alcohol readings to percent ABV and metric volumes to milliliters. */
 export function numericValues(text: string, kind: "alcohol" | "volume"): NumericValues {
   // Match the complete number: never accept the 5% inside 45% or 145%.
   const pattern = kind === "alcohol"
@@ -75,6 +76,10 @@ export function numericValues(text: string, kind: "alcohol" | "volume"): Numeric
   return { values: [...new Set(values)], evidence: matches.join("; "), invalid };
 }
 
+/**
+ * Compare complete field values using text normalization or equivalent numeric units.
+ * Missing, invalid, or conflicting numeric readings require review.
+ */
 export function compareField(expected: string, extracted: string, field = "Field"): ComparisonResult {
   const result = (status: ComparisonStatus, note: string): ComparisonResult => ({
     field, status, notes: [note], expected, extracted,
@@ -116,6 +121,10 @@ const fieldPrefixes: Record<FieldKey, RegExp> = {
   countryOfOrigin: /^(?:(?:country(?: of origin)?|origin)\s*:\s*|(?:product of|made in|produced in)\s+)(.+)$/i,
 };
 
+/**
+ * Fallback for callers with plain OCR text: use explicit prefixes or complete-line
+ * matches to the expected text. The image workflow uses spatial extraction instead.
+ */
 export function extractLabelFields(text: string, expected: ApplicationFields): ExtractedFields {
   // Exclude warning text without dropping label fields that follow it.
   const fieldText = text.replace(/government\s+warning\s*:[\s\S]*?(?:health\s+problems\.|$)/gi, "\n");
@@ -163,6 +172,10 @@ export function warningWordingMatches(warning: string): boolean {
   return normalizeWarning(warning) === normalizeWarning(GOVERNMENT_WARNING);
 }
 
+/**
+ * Check complete warning wording, punctuation, heading case, and proper names.
+ * Matching text still needs human review because OCR cannot establish typography.
+ */
 export function verifyGovernmentWarning(labelText: string): ComparisonResult {
   const base = { field: "Government Warning", expected: GOVERNMENT_WARNING };
   if (!labelText.trim()) {
@@ -190,6 +203,11 @@ export function verifyGovernmentWarning(labelText: string): ComparisonResult {
   };
 }
 
+/**
+ * Compare each applicable field and the warning, retaining source and confidence data.
+ * Manual transcriptions have no automatic confidence score; uncertain or low-confidence
+ * OCR findings require review. Cross-image conflicts are handled by reviewApplication.
+ */
 export function verifyLabel(
   application: ApplicationFields,
   text: string,

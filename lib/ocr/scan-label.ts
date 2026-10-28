@@ -35,9 +35,11 @@ function expandRegion(region: ScanRegion, page: OcrPage): ScanRegion {
   return { ...region, top, height: bottom - top };
 }
 
+/**
+ * Locate likely sideways panels from clusters of short, uncertain OCR fragments.
+ * Geometry identifies candidate regions without assuming a fixed label edge.
+ */
 export function findUncertainRegions(page: OcrPage): ScanRegion[] {
-  // Sideways text often becomes many short, low-confidence fragments. Group
-  // nearby fragments using their positions, without assuming a fixed panel edge.
   const fragments = page.lines.filter((line) => (
     line.confidence < 85 &&
     line.bbox.x1 > line.bbox.x0 && line.bbox.y1 > line.bbox.y0 &&
@@ -79,6 +81,7 @@ export function findUncertainRegions(page: OcrPage): ScanRegion[] {
     .map(({ left, top, width, height }) => ({ left, top, width, height }));
 }
 
+/** Collect a warning's neighboring lines while preserving their actual OCR wording. */
 export function findWarningPanel(page: OcrPage, rotation: Rotation): WarningScan | null {
   const headings = page.lines.filter((line) => /government\s+warning\s*:/i.test(line.text));
   // Do not choose one favorable block when multiple warnings were detected.
@@ -121,6 +124,11 @@ function warningScore(warning: WarningScan): number {
     + warning.confidence;
 }
 
+/**
+ * Scan upright first, then try likely sideways regions before full-image rotations.
+ * Keep useful field pages and the strongest warning reading with their coordinates;
+ * a readable altered warning is returned for verification rather than retried to pass.
+ */
 export async function scanLabelOrientations(
   recognize: (rotation: Rotation, region?: ScanRegion) => Promise<OcrPage>,
   onPass?: (pass: ScanPass) => void,

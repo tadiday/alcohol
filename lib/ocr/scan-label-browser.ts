@@ -1,6 +1,10 @@
 import type { Worker } from "tesseract.js";
 import { scanLabelOrientations, type ScanPass } from "./scan-label";
 
+/**
+ * Adapt browser files/canvases to the shared scan strategy. Cropped and rotated
+ * passes report their frame dimensions so evidence can map to the original image.
+ */
 export async function scanBrowserLabel(worker: Worker, file: File, onPass: (pass: ScanPass) => void) {
   const bitmap = await createImageBitmap(file);
   try {

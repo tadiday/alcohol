@@ -24,6 +24,7 @@ type ApplicationFormProps = {
   onSelectEvidence: (evidence: ValueEvidence) => void;
 };
 
+/** Keep expected values separate from detected evidence and source-linked corrections. */
 export function ApplicationForm({
   applicationId, expected, isImported, hasImages, locked, review, successfulImages,
   overrides, correctionSources, onApplicationIdChange, onImportedChange, onExpectedChange,

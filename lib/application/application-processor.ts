@@ -5,8 +5,11 @@ export const MAX_OCR_CONCURRENCY = 2;
 export type ImageTask<T> = Pick<ApplicationImage, "id" | "applicationId" | "name" | "label"> & { input: T };
 export type ApplicationTask<T> = { applicationId: string; images: ImageTask<T>[] };
 
-// A single bounded queue is shared by all applications in a batch. Images are
-// associated by explicit IDs, never by upload order, file name, or side label.
+/**
+ * Process explicitly associated images through one bounded queue across applications.
+ * Each slot can reuse an OCR worker; an image failure is recorded without stopping
+ * other images. Application latency includes queue wait from the batch start.
+ */
 export async function processApplicationBatch<T>(applications: ApplicationTask<T>[],
   recognize: (image: ImageTask<T>, workerSlot: number) => Promise<LabelScan>, options: {
     concurrency?: number;

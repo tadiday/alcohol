@@ -26,7 +26,7 @@ export function unionBoxes(boxes: BoundingBox[]): BoundingBox | undefined {
   };
 }
 
-// Convert OCR coordinates from a rotated/cropped frame to the original image.
+/** Undo a scan's rotation and crop offset, clamping the box to the source frame. */
 export function originalImageBox(box: BoundingBox, frame: {
   rotation: number; width: number; height: number;
   region?: { left: number; top: number; width: number; height: number };

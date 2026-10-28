@@ -75,6 +75,8 @@ function imageSource(image: ApplicationImage): ImageSource {
     width: original?.width, height: original?.height };
 }
 
+// Group equivalent warning bodies while preserving heading and proper-name case
+// checks; lowercasing the whole reading alone would hide invalid capitalization.
 function warningIdentity(text: string): string {
   const headings = [...text.matchAll(/government\s+warning\s*:/gi)];
   const block = headings.length === 1 ? extractWarningBlock(text) : text;
@@ -94,6 +96,10 @@ function groupEvidence(observations: ValueEvidence[], identify: (entry: ValueEvi
   return [...groups.values()];
 }
 
+/**
+ * Combine equivalent readings into one field while retaining their image evidence.
+ * Different values remain visible as a conflict rather than selecting a winner.
+ */
 function mergeFieldReadings(key: FieldKey, readings: { image: ProcessedApplicationImage; field: ExtractedField }[]) {
   const observations = uniqueEvidence(readings.flatMap(({ image, field }) => (
     field.observations?.length ? field.observations.map((entry) => ({ ...entry, uncertain: field.uncertain || entry.uncertain }))
@@ -127,6 +133,7 @@ function collectWarnings(images: ProcessedApplicationImage[], corrections: Recor
   });
 }
 
+/** Apply strict warning checks and surface disagreements between source images. */
 function reviewWarnings(warnings: ValueEvidence[]): ComparisonResult {
   const warningGroups = groupEvidence(warnings, (entry) => warningIdentity(entry.text));
   const selected = [...warnings].sort((a, b) => (b.confidence ?? 100) - (a.confidence ?? 100))[0];
@@ -149,6 +156,11 @@ function reviewWarnings(warnings: ValueEvidence[]): ComparisonResult {
   return warningResult;
 }
 
+/**
+ * Build one application review from all successfully scanned images, regardless of side.
+ * Pending or failed images keep every finding under review and prevent missing-field
+ * conclusions. Manual corrections retain a source and cannot suppress conflicts.
+ */
 export function reviewApplication(
   applicationId: string,
   expected: ApplicationFields,

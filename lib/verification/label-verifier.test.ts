@@ -11,6 +11,8 @@ import {
   type ApplicationFields,
 } from "./label-verifier";
 
+// These checks compare supplied text directly, separating normalization and strict
+// warning rules from image recognition and multi-image evidence aggregation.
 test("normalizeText collapses spacing and punctuation differences", () => {
   const value = normalizeText("  OLD TOM  DISTILLERY!  ");
   assert.equal(value, "old tom distillery");

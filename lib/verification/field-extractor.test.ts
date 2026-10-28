@@ -4,6 +4,8 @@ import { extractSpatialFields } from "./field-extractor";
 import { GOVERNMENT_WARNING, verifyLabel, type ApplicationFields } from "./label-verifier";
 import type { EvidencePage, OcrLine } from "../ocr/scan-label";
 
+// Explicit line positions and confidence scores isolate layout and candidate rules
+// from OCR engine behavior, including competing columns and clipped text.
 function line(text: string, x: number, y: number, width: number, height = 24, confidence = 95): OcrLine {
   return { text, confidence, bbox: { x0: x, y0: y, x1: x + width, y1: y + height } };
 }

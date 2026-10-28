@@ -15,6 +15,7 @@ const WARNING_PRESENCE = {
   unavailable: "awaiting complete image evidence",
 } satisfies Record<ApplicationReview["warningPresence"], string>;
 
+/** Present the application review as computed; incomplete evidence remains explicit. */
 export function ApplicationResults({ applicationId, review, visible, locked, onSelectEvidence }: {
   applicationId: string;
   review: ApplicationReview;

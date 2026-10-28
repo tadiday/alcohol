@@ -14,6 +14,7 @@ import { reviewApplication } from "../lib/application/application-review";
 import { processApplicationBatch } from "../lib/application/application-processor";
 import type { LabelScan } from "../lib/ocr/scan-label";
 
+/** Use Sharp for the same crop/rotation passes that browser uploads perform on canvas. */
 async function checkImage(worker: Awaited<ReturnType<typeof createWorker>>, image: string | Buffer) {
   const metadata = await sharp(image).metadata();
   if (!metadata.width || !metadata.height) throw new Error("Could not read image dimensions");

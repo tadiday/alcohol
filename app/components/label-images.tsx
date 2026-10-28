@@ -83,6 +83,7 @@ function LabelImageCard({ image, locked, warningCorrection, onRemove, onRetry, o
   );
 }
 
+/** Show image-level progress, retry controls, and optional descriptive side labels. */
 export function LabelImages({
   applicationId, images, successfulCount, locked, isProcessing, complete, error,
   applicationLatencyMs, lastRunMs, warningCorrections, onUpload, onRemove, onRetry,

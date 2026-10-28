@@ -6,6 +6,8 @@ import { GOVERNMENT_WARNING, type ApplicationFields } from "../verification/labe
 import { findWarningPanel, type LabelScan, type OcrPage } from "../ocr/scan-label";
 import { originalImageBox, type ImageLabel } from "../label-evidence";
 
+// Synthetic OCR evidence keeps aggregation, failure handling, and application-ID
+// rules deterministic; actual image recognition is checked by scripts/check-samples.ts.
 const expected: ApplicationFields = {
   brandName: "OLD TOM DISTILLERY", classType: "Kentucky Straight Bourbon Whiskey", alcoholContent: "45%",
   netContents: "750 mL", producerName: "Old Tom Distillery, Louisville, KY", countryOfOrigin: "United States",
